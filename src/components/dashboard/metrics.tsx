@@ -1,0 +1,114 @@
+'use client'
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatCurrency, formatNumber, formatPercentage } from '@/lib/utils'
+import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Target, Lock } from 'lucide-react'
+
+interface MetricsProps {
+  metrics: {
+    totalRevenue: number
+    revenueGrowth: number
+    totalOrders: number
+    ordersGrowth: number
+    averageOrderValue: number
+    aovGrowth: number
+    customerCount: number
+    customerGrowth: number
+  }
+  userType?: 'free' | 'pro'
+}
+
+export function DashboardMetrics({ metrics, userType = 'free' }: MetricsProps) {
+  const allMetricCards = [
+    {
+      title: 'Total Revenue',
+      value: formatCurrency(metrics.totalRevenue),
+      change: metrics.revenueGrowth,
+      icon: DollarSign,
+      description: 'This month',
+      isPro: false
+    },
+    {
+      title: 'Total Orders',
+      value: formatNumber(metrics.totalOrders),
+      change: metrics.ordersGrowth,
+      icon: ShoppingCart,
+      description: 'This month',
+      isPro: false
+    },
+    {
+      title: 'Average Order Value',
+      value: formatCurrency(metrics.averageOrderValue),
+      change: metrics.aovGrowth,
+      icon: Target,
+      description: 'This month',
+      isPro: userType === 'free' // Show as pro feature for free users
+    },
+    {
+      title: 'Total Customers',
+      value: formatNumber(metrics.customerCount),
+      change: metrics.customerGrowth,
+      icon: Users,
+      description: 'All time',
+      isPro: userType === 'free' // Show as pro feature for free users
+    }
+  ]
+
+  // For free users, show only first 2 metrics and blur the rest
+  const metricCards = userType === 'free' ? allMetricCards : allMetricCards
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {metricCards.map((metric, index) => {
+        const Icon = metric.icon
+        const isPositive = metric.change >= 0
+        const TrendIcon = isPositive ? TrendingUp : TrendingDown
+        const isLocked = userType === 'free' && metric.isPro
+        
+        return (
+          <Card key={metric.title} className={isLocked ? 'relative' : ''}>
+            {isLocked && (
+              <div className="absolute inset-0 bg-gray-50/80 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
+                <div className="text-center">
+                  <Lock className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                  <p className="text-xs text-gray-600 font-medium">Pro Feature</p>
+                </div>
+              </div>
+            )}
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                {metric.title}
+              </CardTitle>
+              <Icon className="h-4 w-4 text-gray-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">
+                {metric.value}
+              </div>
+              <div className="flex items-center space-x-1 text-xs">
+                <TrendIcon 
+                  className={`h-3 w-3 ${
+                    isPositive ? 'text-green-600' : 'text-red-600'
+                  }`} 
+                />
+                <span 
+                  className={`font-medium ${
+                    isPositive ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {formatPercentage(Math.abs(metric.change))}
+                </span>
+                <span className="text-gray-600">
+                  vs last month
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {metric.description}
+              </p>
+            </CardContent>
+          </Card>
+        )
+      })}
+    </div>
+  )
+}

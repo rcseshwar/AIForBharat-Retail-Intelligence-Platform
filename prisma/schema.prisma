@@ -1,0 +1,446 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User and Authentication
+model User {
+  id             String      @id @default(cuid())
+  email          String      @unique
+  name           String
+  password       String
+  accountType    AccountType @default(FREE)
+  role           Role        @default(USER)
+  organizationId String?
+  aiQueriesUsed  Int         @default(0)
+  aiQueriesLimit Int         @default(5)
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  queries      Query[]
+  documents    Document[]
+  accessLogs   AccessLog[]
+  subscription Subscription?
+
+  @@map("users")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  industry  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users        User[]
+  products     Product[]
+  marketData   MarketData[]
+  customers    Customer[]
+  risks        Risk[]
+  salesTargets SalesTarget[]
+
+  @@map("organizations")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AccountType {
+  FREE
+  PRO
+}
+
+// Subscription and Payment
+model Subscription {
+  id              String            @id @default(cuid())
+  userId          String            @unique
+  accountType     AccountType
+  status          SubscriptionStatus @default(ACTIVE)
+  startDate       DateTime          @default(now())
+  endDate         DateTime?
+  paymentMethod   String?
+  lastPaymentDate DateTime?
+  nextPaymentDate DateTime?
+  amount          Decimal?          @db.Decimal(10, 2)
+  currency        String            @default("USD")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@map("subscriptions")
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  subscriptionId String
+  amount         Decimal       @db.Decimal(10, 2)
+  currency       String        @default("USD")
+  status         PaymentStatus @default(PENDING)
+  paymentMethod  String
+  transactionId  String?
+  processedAt    DateTime?
+  createdAt      DateTime      @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  SUSPENDED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// Product and Sales Data
+model Product {
+  id             String   @id @default(cuid())
+  name           String
+  category       String
+  price          Decimal  @db.Decimal(10, 2)
+  cost           Decimal  @db.Decimal(10, 2)
+  sku            String?  @unique
+  description    String?
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sales            Sale[]
+  priceHistory     PriceHistory[]
+  competitorPrices CompetitorPrice[]
+  demandForecasts  DemandForecast[]
+
+  @@map("products")
+}
+
+model Sale {
+  id         String   @id @default(cuid())
+  productId  String
+  customerId String
+  quantity   Int
+  revenue    Decimal  @db.Decimal(10, 2)
+  timestamp  DateTime @default(now())
+  channel    String?
+  region     String?
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("sales")
+}
+
+model Customer {
+  id               String    @id @default(cuid())
+  organizationId   String
+  email            String?
+  name             String?
+  segment          String?
+  lifetimeValue    Decimal?  @db.Decimal(10, 2)
+  acquisitionDate  DateTime?
+  lastPurchaseDate DateTime?
+  region           String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sales        Sale[]
+
+  @@map("customers")
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  productId String
+  price     Decimal  @db.Decimal(10, 2)
+  timestamp DateTime @default(now())
+  reason    String?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("price_history")
+}
+
+// Market Intelligence
+model MarketData {
+  id             String   @id @default(cuid())
+  region         String
+  category       String
+  metric         String
+  value          Decimal  @db.Decimal(15, 4)
+  timestamp      DateTime @default(now())
+  source         String
+  organizationId String
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("market_data")
+}
+
+model CompetitorPrice {
+  id         String   @id @default(cuid())
+  productId  String
+  competitor String
+  price      Decimal  @db.Decimal(10, 2)
+  timestamp  DateTime @default(now())
+  source     String?
+  url        String?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("competitor_prices")
+}
+
+// Forecasting and Analytics
+model DemandForecast {
+  id          String   @id @default(cuid())
+  productId   String
+  period      DateTime
+  predicted   Decimal  @db.Decimal(10, 2)
+  confidence  Decimal  @db.Decimal(3, 2)
+  granularity String // 'daily', 'weekly', 'monthly'
+  createdAt   DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("demand_forecasts")
+}
+
+model SalesTarget {
+  id             String   @id @default(cuid())
+  organizationId String
+  category       String?
+  region         String?
+  target         Decimal  @db.Decimal(10, 2)
+  period         DateTime
+  granularity    String // 'monthly', 'quarterly', 'yearly'
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("sales_targets")
+}
+
+// Risk and Compliance
+model Risk {
+  id             String       @id @default(cuid())
+  organizationId String
+  category       String
+  severity       RiskSeverity
+  likelihood     Decimal      @db.Decimal(3, 2)
+  description    String
+  status         RiskStatus   @default(OPEN)
+  detectedAt     DateTime     @default(now())
+  resolvedAt     DateTime?
+  impact         String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  mitigations  Mitigation[]
+
+  @@map("risks")
+}
+
+model Mitigation {
+  id          String           @id @default(cuid())
+  riskId      String
+  strategy    String
+  description String?
+  status      MitigationStatus @default(PLANNED)
+  assignedTo  String?
+  dueDate     DateTime?
+  createdAt   DateTime         @default(now())
+  completedAt DateTime?
+
+  risk Risk @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  @@map("mitigations")
+}
+
+model ComplianceRule {
+  id          String  @id @default(cuid())
+  name        String
+  description String
+  regulation  String
+  category    String
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  violations ComplianceViolation[]
+
+  @@map("compliance_rules")
+}
+
+model ComplianceViolation {
+  id          String   @id @default(cuid())
+  ruleId      String
+  description String
+  severity    String
+  detectedAt  DateTime @default(now())
+  resolvedAt  DateTime?
+  status      String   @default("open")
+
+  rule ComplianceRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@map("compliance_violations")
+}
+
+enum RiskSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RiskStatus {
+  OPEN
+  MITIGATED
+  CLOSED
+}
+
+enum MitigationStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Documents
+model Document {
+  id           String   @id @default(cuid())
+  userId       String
+  filename     String
+  fileType     String
+  fileSize     Int
+  summary      String?
+  uploadedAt   DateTime @default(now())
+  processedAt  DateTime?
+  status       String   @default("uploaded")
+
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  extractedData ExtractedData[]
+
+  @@map("documents")
+}
+
+model ExtractedData {
+  id         String @id @default(cuid())
+  documentId String
+  key        String
+  value      String
+  dataType   String
+  confidence Decimal? @db.Decimal(3, 2)
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("extracted_data")
+}
+
+// System Configuration
+model SystemPrompt {
+  id        String   @id @default(cuid())
+  name      String
+  content   String
+  isActive  Boolean  @default(false)
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedBy String
+
+  versions PromptVersion[]
+
+  @@map("system_prompts")
+}
+
+model PromptVersion {
+  id        String   @id @default(cuid())
+  promptId  String
+  content   String
+  version   Int
+  createdAt DateTime @default(now())
+  createdBy String
+
+  prompt SystemPrompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  @@map("prompt_versions")
+}
+
+// Audit and Logging
+model Query {
+  id            String   @id @default(cuid())
+  userId        String
+  query         String
+  sqlGenerated  String?
+  executionTime Int? // milliseconds
+  timestamp     DateTime @default(now())
+  success       Boolean
+  errorMessage  String?
+  resultCount   Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("queries")
+}
+
+model AccessLog {
+  id        String   @id @default(cuid())
+  userId    String
+  resource  String
+  action    String
+  timestamp DateTime @default(now())
+  ipAddress String?
+  success   Boolean
+  details   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("access_logs")
+}
+
+model Alert {
+  id          String   @id @default(cuid())
+  type        String
+  severity    String
+  title       String
+  description String
+  data        String? // JSON data
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
+  resolvedAt  DateTime?
+
+  @@map("alerts")
+}
+
+// Performance Monitoring
+model PerformanceMetric {
+  id        String   @id @default(cuid())
+  endpoint  String
+  method    String
+  duration  Int // milliseconds
+  timestamp DateTime @default(now())
+  userId    String?
+  success   Boolean
+  errorType String?
+
+  @@map("performance_metrics")
+}
