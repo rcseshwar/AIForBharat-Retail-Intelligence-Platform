@@ -1,81 +1,49 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { DashboardMetrics } from '@/components/dashboard/metrics'
-import { RecentActivity } from '@/components/dashboard/recent-activity'
-import { QuickActions } from '@/components/dashboard/quick-actions'
-
-// Mock data for demo purposes
-const mockMetrics = {
-  totalRevenue: 125000,
-  revenueGrowth: 0.12,
-  totalOrders: 1250,
-  ordersGrowth: 0.08,
-  averageOrderValue: 100,
-  aovGrowth: 0.04,
-  customerCount: 850,
-  customerGrowth: 0.15
-}
-
-const mockQueries = [
-  {
-    id: '1',
-    query: 'Show me top selling products this month',
-    success: true,
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    executionTime: 1250,
-    user: { name: 'Demo User' }
-  },
-  {
-    id: '2',
-    query: 'What are the customer segments by revenue?',
-    success: true,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    executionTime: 890,
-    user: { name: 'Demo User' }
-  }
-]
-
-const mockAlerts = [
-  {
-    id: '1',
-    type: 'info',
-    severity: 'low',
-    title: 'Market Trend Alert',
-    description: 'New market trend detected in electronics category',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4) // 4 hours ago
-  }
-]
 
 export default function DashboardPage() {
   const [hasApiKey, setHasApiKey] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [debugInfo, setDebugInfo] = useState('')
   const router = useRouter()
 
   useEffect(() => {
-    // Add a small delay to ensure sessionStorage is available
     const checkApiKey = () => {
       try {
-        const apiKey = sessionStorage.getItem('openai_api_key')
+        setDebugInfo('Checking API key...')
         
-        if (!apiKey) {
-          // Redirect to home if no API key is set
-          router.push('/')
+        // Check if we're on the client side
+        if (typeof window === 'undefined') {
+          setDebugInfo('Server side rendering')
           return
         }
         
+        const apiKey = sessionStorage.getItem('openai_api_key')
+        
+        setDebugInfo(`API key found: ${apiKey ? 'Yes' : 'No'}`)
+        
+        if (!apiKey) {
+          setDebugInfo('No API key found')
+          setHasApiKey(false)
+          setIsLoading(false)
+          return
+        }
+        
+        setDebugInfo('API key found, setting hasApiKey to true')
         setHasApiKey(true)
       } catch (error) {
+        setDebugInfo(`Error: ${error}`)
         console.error('Error accessing sessionStorage:', error)
-        router.push('/')
+        setHasApiKey(false)
       } finally {
         setIsLoading(false)
       }
     }
 
     // Small delay to ensure client-side hydration is complete
-    const timer = setTimeout(checkApiKey, 100)
+    const timer = setTimeout(checkApiKey, 200)
     return () => clearTimeout(timer)
   }, [router])
 
@@ -85,6 +53,7 @@ export default function DashboardPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your dashboard...</p>
+          <p className="text-sm text-gray-500 mt-2">Debug: {debugInfo}</p>
         </div>
       </div>
     )
@@ -94,8 +63,15 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecting...</p>
+          <h2 className="text-xl font-bold text-red-600 mb-4">No API Key Found</h2>
+          <p className="text-gray-600 mb-4">Debug: {debugInfo}</p>
+          <p className="text-gray-600 mb-4">Please go back to the home page and enter your OpenAI API key.</p>
+          <button 
+            onClick={() => router.push('/')}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Go to Home Page
+          </button>
         </div>
       </div>
     )
@@ -112,57 +88,74 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Simple test content */}
+      <div className="bg-white p-6 rounded-lg border">
+        <h2 className="text-xl font-semibold mb-4">Dashboard is Working!</h2>
+        <p className="text-gray-600">Debug info: {debugInfo}</p>
+        <p className="text-gray-600 mt-2">API Key status: {hasApiKey ? 'Found' : 'Not found'}</p>
+      </div>
+
       {/* Metrics Overview */}
-      <DashboardMetrics metrics={mockMetrics} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="text-lg font-medium text-gray-900">Total Revenue</h3>
+          <p className="text-2xl font-bold text-blue-600">$125,000</p>
+          <p className="text-sm text-gray-500">+12% from last month</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="text-lg font-medium text-gray-900">Total Orders</h3>
+          <p className="text-2xl font-bold text-green-600">1,250</p>
+          <p className="text-sm text-gray-500">+8% from last month</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="text-lg font-medium text-gray-900">Avg Order Value</h3>
+          <p className="text-2xl font-bold text-purple-600">$100</p>
+          <p className="text-sm text-gray-500">+4% from last month</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="text-lg font-medium text-gray-900">Customers</h3>
+          <p className="text-2xl font-bold text-orange-600">850</p>
+          <p className="text-sm text-gray-500">+15% from last month</p>
+        </div>
+      </div>
 
-      {/* Quick Actions */}
-      <QuickActions />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <RecentActivity 
-          queries={mockQueries}
-          alerts={mockAlerts}
-        />
-
-        {/* Getting Started Guide */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Getting Started
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-medium text-blue-600">1</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Try natural language queries</p>
-                <p className="text-xs text-gray-600">
-                  Ask questions about your data in plain English
-                </p>
-              </div>
+      {/* Getting Started Guide */}
+      <div className="bg-white rounded-lg border p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Getting Started
+        </h3>
+        <div className="space-y-3">
+          <div className="flex items-start space-x-3">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-xs font-medium text-blue-600">1</span>
             </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-medium text-blue-600">2</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Explore AI insights</p>
-                <p className="text-xs text-gray-600">
-                  Access market intelligence, forecasting, risk analysis, and more
-                </p>
-              </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Try natural language queries</p>
+              <p className="text-xs text-gray-600">
+                Ask questions about your data in plain English
+              </p>
             </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-medium text-blue-600">3</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Analyze your data</p>
-                <p className="text-xs text-gray-600">
-                  Get insights from your sales, customers, and market data
-                </p>
-              </div>
+          </div>
+          <div className="flex items-start space-x-3">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-xs font-medium text-blue-600">2</span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Explore AI insights</p>
+              <p className="text-xs text-gray-600">
+                Access market intelligence, forecasting, risk analysis, and more
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start space-x-3">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-xs font-medium text-blue-600">3</span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Analyze your data</p>
+              <p className="text-xs text-gray-600">
+                Get insights from your sales, customers, and market data
+              </p>
             </div>
           </div>
         </div>

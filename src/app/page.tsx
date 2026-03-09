@@ -28,11 +28,21 @@ export default function HomePage() {
 
     setIsLoading(true)
     
-    // Store API key in session storage
-    sessionStorage.setItem('openai_api_key', apiKey)
-    
-    // Navigate to dashboard
-    router.push('/dashboard')
+    try {
+      // Store API key in session storage
+      sessionStorage.setItem('openai_api_key', apiKey)
+      
+      // Verify it was stored
+      const storedKey = sessionStorage.getItem('openai_api_key')
+      console.log('API key stored:', storedKey ? 'Yes' : 'No')
+      
+      // Navigate to dashboard
+      router.push('/dashboard')
+    } catch (error) {
+      console.error('Error storing API key:', error)
+      alert('Error storing API key. Please try again.')
+      setIsLoading(false)
+    }
   }
 
   return (
