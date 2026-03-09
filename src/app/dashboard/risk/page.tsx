@@ -4,22 +4,22 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Shield, AlertTriangle, CheckCircle, XCircle, Lock, AlertCircle } from 'lucide-react'
+import { Shield, AlertTriangle, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react'
 
 export default function RiskPage() {
-  const [userType, setUserType] = useState<'free' | 'pro' | null>(null)
+  const [hasApiKey, setHasApiKey] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    const storedUserType = sessionStorage.getItem('userType') as 'free' | 'pro' | null
-    if (!storedUserType) {
+    const apiKey = sessionStorage.getItem('openai_api_key')
+    if (!apiKey) {
       router.push('/')
       return
     }
-    setUserType(storedUserType)
+    setHasApiKey(true)
   }, [router])
 
-  if (!userType) {
+  if (!hasApiKey) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -30,31 +30,178 @@ export default function RiskPage() {
     )
   }
 
-  if (userType === 'free') {
-    return (
-      <div className="space-y-6">
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Risk Analysis</h1>
           <p className="text-gray-600">
             Identify and mitigate business risks with AI-powered analysis.
           </p>
         </div>
+        <Button variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Analyze Risks
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Risk Score</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">Medium</div>
+            <p className="text-xs text-muted-foreground">
+              Score: 6.2/10
+            </p>
+          </CardContent>
+        </Card>
 
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Lock className="h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Pro Feature</h3>
-            <p className="text-gray-600 text-center mb-6 max-w-md">
-              Risk Analysis is available for Pro users. Get comprehensive risk assessment and mitigation strategies for your business.
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Risks</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">3</div>
+            <p className="text-xs text-muted-foreground">
+              Require attention
             </p>
-            <Button onClick={() => router.push('/dashboard')} className="bg-purple-600 hover:bg-purple-700">
-              Upgrade to Pro
-            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Mitigated</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">7</div>
+            <p className="text-xs text-muted-foreground">
+              Successfully handled
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Compliance</CardTitle>
+            <XCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">98%</div>
+            <p className="text-xs text-muted-foreground">
+              Compliance rate
+            </p>
           </CardContent>
         </Card>
       </div>
-    )
-  }
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Active Risks</CardTitle>
+            <CardDescription>Risks requiring immediate attention</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-red-900">Supply Chain Disruption</p>
+                  <p className="text-sm text-red-800">High dependency on single supplier</p>
+                  <p className="text-xs text-red-600 mt-1">Impact: High | Likelihood: Medium</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-yellow-900">Market Volatility</p>
+                  <p className="text-sm text-yellow-800">Economic uncertainty affecting demand</p>
+                  <p className="text-xs text-yellow-600 mt-1">Impact: Medium | Likelihood: High</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-orange-900">Cybersecurity Threat</p>
+                  <p className="text-sm text-orange-800">Increased phishing attempts detected</p>
+                  <p className="text-xs text-orange-600 mt-1">Impact: High | Likelihood: Low</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Mitigation Strategies</CardTitle>
+            <CardDescription>Recommended actions to reduce risks</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-1">Diversify Suppliers</h4>
+                <p className="text-sm text-blue-800">Identify and onboard 2-3 alternative suppliers</p>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-xs text-blue-600">Priority: High</span>
+                  <span className="text-xs text-blue-600">Timeline: 30 days</span>
+                </div>
+              </div>
+              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                <h4 className="font-medium text-green-900 mb-1">Market Hedging</h4>
+                <p className="text-sm text-green-800">Implement financial hedging strategies</p>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-xs text-green-600">Priority: Medium</span>
+                  <span className="text-xs text-green-600">Timeline: 60 days</span>
+                </div>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                <h4 className="font-medium text-purple-900 mb-1">Security Training</h4>
+                <p className="text-sm text-purple-800">Conduct cybersecurity awareness training</p>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-xs text-purple-600">Priority: High</span>
+                  <span className="text-xs text-purple-600">Timeline: 14 days</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>AI Risk Insights</CardTitle>
+          <CardDescription>Intelligent risk analysis and recommendations</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+              <h4 className="font-medium text-red-900 mb-2">Critical Alert</h4>
+              <p className="text-sm text-red-800">
+                Supply chain analysis indicates 85% dependency on single supplier. This creates significant business continuity risk. Immediate action recommended.
+              </p>
+            </div>
+            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <h4 className="font-medium text-yellow-900 mb-2">Market Risk</h4>
+              <p className="text-sm text-yellow-800">
+                Economic indicators suggest potential market downturn in Q4. Consider defensive strategies and cash flow optimization.
+              </p>
+            </div>
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 className="font-medium text-blue-900 mb-2">Opportunity</h4>
+              <p className="text-sm text-blue-800">
+                Strong compliance record (98%) positions company well for regulatory audits. Consider leveraging this as competitive advantage.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
   return (
     <div className="space-y-6">
