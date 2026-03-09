@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AIService } from '@/lib/openai'
-import { prisma } from '@/lib/prisma'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -98,6 +97,9 @@ export async function POST(request: NextRequest) {
 
     try {
       const queryStart = Date.now()
+      
+      // Dynamic import of Prisma to avoid build-time connection
+      const { prisma } = await import('@/lib/prisma')
       data = await prisma.$queryRawUnsafe(sql)
       executionTime = Date.now() - queryStart
 
