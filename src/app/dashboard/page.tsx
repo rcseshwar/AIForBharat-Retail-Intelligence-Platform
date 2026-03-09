@@ -121,9 +121,9 @@ export default function DashboardPage() {
               <span className="text-xs font-medium text-blue-600 dark:text-blue-400">2</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Explore AI insights</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Explore AI features</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Access market intelligence, forecasting, risk analysis, and more
+                Access AI Query, Copilot, and Market Intelligence
               </p>
             </div>
           </div>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">Analyze your data</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Get insights from your sales, customers, and market data
+                Get insights from your business data using AI
               </p>
             </div>
           </div>

@@ -4,16 +4,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-  BarChart3,
-  Brain,
   Database,
-  FileText,
   Home,
   MessageSquare,
   Settings,
-  Shield,
   TrendingUp,
-  Users,
 } from 'lucide-react'
 
 interface NavItem {
@@ -42,31 +37,6 @@ const navItems: NavItem[] = [
     title: 'Market Intelligence',
     href: '/dashboard/market',
     icon: TrendingUp,
-  },
-  {
-    title: 'Demand Forecasting',
-    href: '/dashboard/forecasting',
-    icon: BarChart3,
-  },
-  {
-    title: 'Pricing Optimization',
-    href: '/dashboard/pricing',
-    icon: Brain,
-  },
-  {
-    title: 'Risk Analysis',
-    href: '/dashboard/risk',
-    icon: Shield,
-  },
-  {
-    title: 'Documents',
-    href: '/dashboard/documents',
-    icon: FileText,
-  },
-  {
-    title: 'Customers',
-    href: '/dashboard/customers',
-    icon: Users,
   },
   {
     title: 'Settings',
