@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency, formatNumber, formatPercentage } from '@/lib/utils'
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Target, Lock } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Target } from 'lucide-react'
 
 interface MetricsProps {
   metrics: {
@@ -15,66 +15,49 @@ interface MetricsProps {
     customerCount: number
     customerGrowth: number
   }
-  userType?: 'free' | 'pro'
 }
 
-export function DashboardMetrics({ metrics, userType = 'free' }: MetricsProps) {
-  const allMetricCards = [
+export function DashboardMetrics({ metrics }: MetricsProps) {
+  const metricCards = [
     {
       title: 'Total Revenue',
       value: formatCurrency(metrics.totalRevenue),
       change: metrics.revenueGrowth,
       icon: DollarSign,
-      description: 'This month',
-      isPro: false
+      description: 'This month'
     },
     {
       title: 'Total Orders',
       value: formatNumber(metrics.totalOrders),
       change: metrics.ordersGrowth,
       icon: ShoppingCart,
-      description: 'This month',
-      isPro: false
+      description: 'This month'
     },
     {
       title: 'Average Order Value',
       value: formatCurrency(metrics.averageOrderValue),
       change: metrics.aovGrowth,
       icon: Target,
-      description: 'This month',
-      isPro: userType === 'free' // Show as pro feature for free users
+      description: 'This month'
     },
     {
       title: 'Total Customers',
       value: formatNumber(metrics.customerCount),
       change: metrics.customerGrowth,
       icon: Users,
-      description: 'All time',
-      isPro: userType === 'free' // Show as pro feature for free users
+      description: 'All time'
     }
   ]
 
-  // For free users, show only first 2 metrics and blur the rest
-  const metricCards = userType === 'free' ? allMetricCards : allMetricCards
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {metricCards.map((metric, index) => {
+      {metricCards.map((metric) => {
         const Icon = metric.icon
         const isPositive = metric.change >= 0
         const TrendIcon = isPositive ? TrendingUp : TrendingDown
-        const isLocked = userType === 'free' && metric.isPro
         
         return (
-          <Card key={metric.title} className={isLocked ? 'relative' : ''}>
-            {isLocked && (
-              <div className="absolute inset-0 bg-gray-50/80 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
-                <div className="text-center">
-                  <Lock className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                  <p className="text-xs text-gray-600 font-medium">Pro Feature</p>
-                </div>
-              </div>
-            )}
+          <Card key={metric.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">
                 {metric.title}

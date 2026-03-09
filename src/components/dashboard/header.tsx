@@ -11,49 +11,37 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { getInitials } from '@/lib/utils'
-import { LogOut, Settings, User } from 'lucide-react'
+import { Key, LogOut, Settings } from 'lucide-react'
 
 export function DashboardHeader() {
   const router = useRouter()
-  const [userType, setUserType] = useState<'free' | 'pro' | null>(null)
-  const [userName, setUserName] = useState('')
-  const [userEmail, setUserEmail] = useState('')
+  const [hasApiKey, setHasApiKey] = useState(false)
+  const [apiKeyPreview, setApiKeyPreview] = useState('')
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
-    const storedUserType = sessionStorage.getItem('userType') as 'free' | 'pro' | null
-    const storedUserId = sessionStorage.getItem('userId')
-    const storedUserName = sessionStorage.getItem('userName')
-    const storedUserEmail = sessionStorage.getItem('userEmail')
+    const apiKey = sessionStorage.getItem('openai_api_key')
     
-    setUserType(storedUserType)
-    
-    // Use stored user info if available, otherwise use defaults
-    if (storedUserId && storedUserName && storedUserEmail) {
-      setUserName(storedUserName)
-      setUserEmail(storedUserEmail)
-    } else if (storedUserType) {
-      setUserName(storedUserType === 'pro' ? 'Pro User' : 'Free User')
-      setUserEmail(storedUserType === 'pro' ? 'pro@demo.com' : 'free@demo.com')
+    if (!apiKey) {
+      // Redirect to home if no API key
+      router.push('/')
+      return
     }
-  }, [])
+    
+    setHasApiKey(true)
+    // Show only first 7 and last 4 characters of API key
+    setApiKeyPreview(`${apiKey.substring(0, 7)}...${apiKey.substring(apiKey.length - 4)}`)
+  }, [router])
 
-  const handleLogout = () => {
-    // Clear session storage and redirect to home
-    sessionStorage.removeItem('userType')
-    sessionStorage.removeItem('userId')
-    sessionStorage.removeItem('userName')
-    sessionStorage.removeItem('userEmail')
-    sessionStorage.removeItem('aiQueriesUsed')
-    sessionStorage.removeItem('aiQueriesLimit')
+  const handleChangeApiKey = () => {
+    // Clear API key and redirect to home
+    sessionStorage.removeItem('openai_api_key')
     router.push('/')
   }
 
-  // Don't render user-specific content until client-side hydration is complete
-  if (!isClient || !userType) {
+  // Don't render until client-side hydration is complete
+  if (!isClient || !hasApiKey) {
     return (
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -62,7 +50,7 @@ export function DashboardHeader() {
               AI Retail Intelligence
             </h1>
             <p className="text-sm text-gray-600">
-              Demo Platform
+              Powered by OpenAI
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -81,49 +69,28 @@ export function DashboardHeader() {
             AI Retail Intelligence
           </h1>
           <p className="text-sm text-gray-600">
-            Demo Platform
+            Powered by OpenAI
           </p>
         </div>
 
         <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Key className="h-4 w-4" />
+            <span>API Key: {apiKeyPreview}</span>
+          </div>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-blue-600 text-white">
-                    {getInitials(userName)}
-                  </AvatarFallback>
-                </Avatar>
+              <Button variant="ghost" size="sm">
+                <Settings className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{userName}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {userEmail}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    Type: {userType || 'free'}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
+            <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuLabel>Settings</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-red-600"
-                onClick={handleLogout}
-              >
+              <DropdownMenuItem onClick={handleChangeApiKey}>
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Switch User Type</span>
+                <span>Change API Key</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

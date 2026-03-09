@@ -47,6 +47,17 @@ export function QueryInterface({ userType = 'free', userId, queriesRemaining }: 
     e.preventDefault()
     if (!query.trim()) return
 
+    // Get API key from session storage
+    const apiKey = sessionStorage.getItem('openai_api_key')
+    if (!apiKey) {
+      toast({
+        title: 'API Key Required',
+        description: 'Please provide your OpenAI API key to use this feature',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setIsLoading(true)
     setResults(null)
 
@@ -58,19 +69,13 @@ export function QueryInterface({ userType = 'free', userId, queriesRemaining }: 
         },
         body: JSON.stringify({ 
           query: query.trim(),
-          userType,
-          userId 
+          apiKey
         }),
       })
 
       const result: QueryResult = await response.json()
 
       setResults(result)
-
-      // Update queries remaining if provided
-      if (result.queriesRemaining !== undefined) {
-        setCurrentQueriesRemaining(result.queriesRemaining)
-      }
 
       // Add to history
       setQueryHistory(prev => [{
@@ -132,19 +137,6 @@ export function QueryInterface({ userType = 'free', userId, queriesRemaining }: 
             </CardTitle>
             <CardDescription>
               Type your question in natural language. For example: "What are our top selling products this month?"
-              {userType === 'free' && userId && (
-                <span className="block mt-1 text-orange-600 text-sm">
-                  {currentQueriesRemaining !== undefined 
-                    ? `${currentQueriesRemaining} queries remaining today`
-                    : 'Free users are limited to 5 queries per day'
-                  }
-                </span>
-              )}
-              {userType === 'free' && !userId && (
-                <span className="block mt-1 text-blue-600 text-sm">
-                  Demo mode - Register for a free account to track your usage
-                </span>
-              )}
             </CardDescription>
           </CardHeader>
           <CardContent>

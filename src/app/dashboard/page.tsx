@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation'
 import { DashboardMetrics } from '@/components/dashboard/metrics'
 import { RecentActivity } from '@/components/dashboard/recent-activity'
 import { QuickActions } from '@/components/dashboard/quick-actions'
-import { UserTypeBadge } from '@/components/dashboard/user-type-badge'
-import { UpgradePrompt } from '@/components/dashboard/upgrade-prompt'
 
 // Mock data for demo purposes
 const mockMetrics = {
@@ -51,25 +49,23 @@ const mockAlerts = [
 ]
 
 export default function DashboardPage() {
-  const [userType, setUserType] = useState<'free' | 'pro' | null>(null)
-  const [userName, setUserName] = useState('Demo User')
+  const [hasApiKey, setHasApiKey] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    // Get user type from session storage
-    const storedUserType = sessionStorage.getItem('userType') as 'free' | 'pro' | null
+    // Check if API key exists
+    const apiKey = sessionStorage.getItem('openai_api_key')
     
-    if (!storedUserType) {
-      // Redirect to home if no user type is set
+    if (!apiKey) {
+      // Redirect to home if no API key is set
       router.push('/')
       return
     }
     
-    setUserType(storedUserType)
-    setUserName(storedUserType === 'pro' ? 'Pro User' : 'Free User')
+    setHasApiKey(true)
   }, [router])
 
-  if (!userType) {
+  if (!hasApiKey) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -86,27 +82,22 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">
-            Welcome back, {userName}! Here's what's happening with your business.
+            Welcome! Here's what's happening with your business.
           </p>
         </div>
-        {userType && <UserTypeBadge userType={userType} />}
       </div>
 
-      {/* Show upgrade prompt for free users */}
-      {userType === 'free' && <UpgradePrompt />}
-
       {/* Metrics Overview */}
-      <DashboardMetrics metrics={mockMetrics} userType={userType} />
+      <DashboardMetrics metrics={mockMetrics} />
 
       {/* Quick Actions */}
-      <QuickActions userType={userType} />
+      <QuickActions />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
         <RecentActivity 
           queries={mockQueries}
           alerts={mockAlerts}
-          userType={userType}
         />
 
         {/* Getting Started Guide */}
@@ -122,7 +113,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-sm font-medium text-gray-900">Try natural language queries</p>
                 <p className="text-xs text-gray-600">
-                  {userType === 'free' ? 'Up to 5 queries per day' : 'Unlimited queries'}
+                  Ask questions about your data in plain English
                 </p>
               </div>
             </div>
@@ -133,20 +124,21 @@ export default function DashboardPage() {
               <div>
                 <p className="text-sm font-medium text-gray-900">Explore AI insights</p>
                 <p className="text-xs text-gray-600">
-                  {userType === 'free' 
-                    ? 'Basic market intelligence and forecasting' 
-                    : 'Full AI suite: market intelligence, forecasting, risk analysis, and more'
-                  }
+                  Access market intelligence, forecasting, risk analysis, and more
                 </p>
               </div>
             </div>
-            {userType === 'free' && (
-              <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                <p className="text-sm text-purple-800">
-                  <strong>Upgrade to Pro</strong> to unlock unlimited queries, advanced AI features, and priority support.
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-xs font-medium text-blue-600">3</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Analyze your data</p>
+                <p className="text-xs text-gray-600">
+                  Get insights from your sales, customers, and market data
                 </p>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

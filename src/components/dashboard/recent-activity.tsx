@@ -27,10 +27,9 @@ interface Alert {
 interface RecentActivityProps {
   queries: Query[]
   alerts: Alert[]
-  userType: 'free' | 'pro'
 }
 
-export function RecentActivity({ queries, alerts, userType }: RecentActivityProps) {
+export function RecentActivity({ queries, alerts }: RecentActivityProps) {
   const getSeverityColor = (severity: string) => {
     switch (severity.toLowerCase()) {
       case 'low': return 'text-green-600 bg-green-50'

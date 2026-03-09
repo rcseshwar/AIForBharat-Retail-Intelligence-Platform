@@ -14,10 +14,9 @@ A comprehensive Next.js-based platform that provides retail teams, marketplace o
 - **Document Processing**: Extract insights from business documents
 
 ### Technical Features
-- **Secure API Key Management**: Session-only storage with automatic cleanup
+- **Secure API Key Management**: Client-side storage with session-only access
 - **Real-time Analytics**: Live dashboards with performance metrics
-- **Comprehensive Audit Logging**: Track all queries and access attempts
-- **Role-based Access Control**: Admin and user roles with appropriate permissions
+- **Comprehensive Data Analysis**: Pre-loaded demo data for immediate testing
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Docker Containerization**: Easy deployment and scaling
 
@@ -27,23 +26,21 @@ A comprehensive Next.js-based platform that provides retail teams, marketplace o
 - **Frontend/Backend**: Next.js 14+ with App Router
 - **Database**: PostgreSQL 15+ with Prisma ORM
 - **AI Provider**: OpenAI API (GPT-4 or GPT-4-turbo)
-- **Session Storage**: Redis for API keys and session data
-- **Authentication**: NextAuth.js with credentials provider
+- **Caching**: Redis for performance optimization
 - **Styling**: Tailwind CSS with Radix UI components
 - **Containerization**: Docker and Docker Compose
 
 ### Security Features
-- API keys stored only in encrypted session memory
+- API keys stored only in browser session storage
 - SQL injection prevention with parameterized queries
-- Row-level security for multi-tenant data isolation
-- Comprehensive audit logging
+- Comprehensive query validation and sanitization
 - HTTPS/TLS encryption for all communications
 
 ## 📋 Prerequisites
 
 - Node.js 20+ and npm 10+
 - Docker and Docker Compose
-- OpenAI API key
+- OpenAI API key ([Get one here](https://platform.openai.com/api-keys))
 - Git
 
 ## 🚀 Quick Start
@@ -71,20 +68,15 @@ DATABASE_URL="postgresql://retail_user:retail_pass@localhost:5432/retail_intelli
 # Redis
 REDIS_URL="redis://localhost:6379"
 
-# OpenAI API Key (required for AI features)
-# Get your API key from https://platform.openai.com/api-keys
-OPENAI_API_KEY="sk-your-openai-api-key-here"
-
 # Application
 NODE_ENV="development"
 OPENAI_MODEL="gpt-4-turbo"
-SESSION_TTL="3600"
 MAX_QUERY_RESULTS="1000"
 ALERT_THRESHOLD="0.2"
 LOG_LEVEL="info"
 ```
 
-**Important**: Replace `sk-your-openai-api-key-here` with your actual OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys).
+**Note**: OpenAI API key is now entered directly in the application interface for better security and flexibility.
 
 ### 3. Docker Deployment (Recommended)
 ```bash

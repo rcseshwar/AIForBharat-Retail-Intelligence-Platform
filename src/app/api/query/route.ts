@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now()
   
   try {
-    const { query, userType, userId } = await request.json()
+    const { query, apiKey } = await request.json()
 
     if (!query) {
       return NextResponse.json(
@@ -52,52 +52,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user is registered and has query limits
-    let user = null
-    if (userId) {
-      user = await prisma.user.findUnique({
-        where: { id: userId }
-      })
-
-      if (user) {
-        // Check if user has exceeded their query limit
-        if (user.aiQueriesUsed >= user.aiQueriesLimit) {
-          return NextResponse.json(
-            { 
-              success: false,
-              error: 'Query limit exceeded',
-              message: `You have reached your daily limit of ${user.aiQueriesLimit} queries. ${user.accountType === 'FREE' ? 'Upgrade to Pro for unlimited queries.' : 'Please try again tomorrow.'}`,
-              queriesRemaining: 0
-            },
-            { status: 429 }
-          )
-        }
-      }
-    }
-
-    // Get API key from environment variables
-    const apiKey = process.env.OPENAI_API_KEY
     if (!apiKey) {
       return NextResponse.json(
-        { success: false, error: 'OpenAI API key not configured. Please contact the administrator.' },
-        { status: 500 }
+        { success: false, error: 'OpenAI API key is required' },
+        { status: 400 }
       )
     }
 
-    // Check user type limits (for demo purposes)
-    if (userType === 'free' && !userId) {
-      // For demo users without registration, allow limited queries
-      // In a real app, you'd implement session-based rate limiting here
+    if (!apiKey.startsWith('sk-')) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid OpenAI API key format' },
+        { status: 400 }
+      )
     }
 
-    // Initialize AI service
+    // Initialize AI service with provided API key
     const aiService = new AIService(apiKey)
 
     // Generate SQL from natural language
     const { sql, explanation } = await aiService.generateSQL(
       query,
       DATABASE_SCHEMA,
-      user?.organizationId || 'demo-org'
+      'demo-org'
     )
 
     // Validate SQL (basic security check)
@@ -133,36 +109,6 @@ export async function POST(request: NextRequest) {
       console.error('SQL execution error:', sqlError)
     }
 
-    // Update user's query count if registered
-    let queriesRemaining = null
-    if (user && success) {
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: {
-          aiQueriesUsed: user.aiQueriesUsed + 1
-        }
-      })
-      queriesRemaining = Math.max(0, updatedUser.aiQueriesLimit - updatedUser.aiQueriesUsed)
-    }
-
-    // Log the query
-    try {
-      await prisma.query.create({
-        data: {
-          userId: userId || `demo-user-${userType}`,
-          query,
-          sqlGenerated: sql,
-          executionTime,
-          success,
-          errorMessage,
-          resultCount: data.length
-        }
-      })
-    } catch (logError) {
-      console.error('Failed to log query:', logError)
-      // Continue execution even if logging fails
-    }
-
     const totalTime = Date.now() - startTime
 
     if (!success) {
@@ -170,8 +116,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: errorMessage || 'Query execution failed',
         sqlGenerated: sql,
-        explanation,
-        queriesRemaining
+        explanation
       })
     }
 
@@ -181,8 +126,7 @@ export async function POST(request: NextRequest) {
       explanation,
       sqlGenerated: sql,
       executionTime: totalTime,
-      resultCount: data.length,
-      queriesRemaining
+      resultCount: data.length
     })
 
   } catch (error: any) {
