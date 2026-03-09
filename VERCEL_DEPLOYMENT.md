@@ -15,7 +15,7 @@
 ### 2. Environment Variables
 Set these environment variables in your Vercel project settings:
 
-**Required for full functionality:**
+**Optional (for full functionality):**
 ```
 DATABASE_URL=postgresql://user:password@host:port/database
 REDIS_URL=redis://user:password@host:port
@@ -30,7 +30,9 @@ ALERT_THRESHOLD=0.2
 LOG_LEVEL=info
 ```
 
-**Note:** OpenAI API key is entered directly in the application interface, not as an environment variable.
+**Note:** 
+- OpenAI API key is entered directly in the application interface, not as an environment variable.
+- The application works without any environment variables - they're only needed for database and Redis functionality.
 
 ### 3. Database Setup Options
 
