@@ -30,8 +30,8 @@ export function DashboardHeader() {
     }
     
     setHasApiKey(true)
-    // Show only first 7 and last 4 characters of API key
-    setApiKeyPreview(`${apiKey.substring(0, 7)}...${apiKey.substring(apiKey.length - 4)}`)
+    // Show the full API key
+    setApiKeyPreview(apiKey)
   }, [router])
 
   const handleChangeApiKey = () => {
@@ -74,9 +74,14 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Key className="h-4 w-4" />
-            <span>API Key: {apiKeyPreview}</span>
+          <div className="flex flex-col items-end space-y-1">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <Key className="h-4 w-4" />
+              <span className="font-mono text-xs">{apiKeyPreview}</span>
+            </div>
+            <p className="text-xs text-green-600 font-medium">
+              🔒 Session only - not stored on server
+            </p>
           </div>
           
           <DropdownMenu>
