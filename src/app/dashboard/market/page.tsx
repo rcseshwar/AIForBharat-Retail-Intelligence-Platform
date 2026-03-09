@@ -36,51 +36,6 @@ export default function MarketPage() {
   const router = useRouter()
   const { toast } = useToast()
 
-  useEffect(() => {
-    const checkApiKey = () => {
-      try {
-        const apiKey = sessionStorage.getItem('openai_api_key')
-        if (!apiKey) {
-          router.push('/')
-          return
-        }
-        setHasApiKey(true)
-        // Load initial market data
-        loadMarketData()
-      } catch (error) {
-        console.error('Error accessing sessionStorage:', error)
-        router.push('/')
-      } finally {
-        setIsPageLoading(false)
-      }
-    }
-
-    const timer = setTimeout(checkApiKey, 100)
-    return () => clearTimeout(timer)
-  }, [router])
-
-  if (isPageLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!hasApiKey) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecting...</p>
-        </div>
-      </div>
-    )
-  }
-
   const loadMarketData = async () => {
     const apiKey = sessionStorage.getItem('openai_api_key')
     if (!apiKey) return
@@ -99,11 +54,16 @@ export default function MarketPage() {
         }),
       })
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const result = await response.json()
 
       if (result.success) {
         setMarketData(result.data)
       } else {
+        console.error('Market intelligence error:', result.error)
         toast({
           title: 'Error',
           description: result.error || 'Failed to load market intelligence data',
@@ -111,6 +71,7 @@ export default function MarketPage() {
         })
       }
     } catch (error) {
+      console.error('Market intelligence network error:', error)
       toast({
         title: 'Error',
         description: 'Network error. Please try again.',
@@ -121,12 +82,48 @@ export default function MarketPage() {
     }
   }
 
-  if (!hasApiKey) {
+  useEffect(() => {
+    const checkApiKey = () => {
+      try {
+        const apiKey = sessionStorage.getItem('openai_api_key')
+        if (!apiKey) {
+          router.push('/')
+          return
+        }
+        setHasApiKey(true)
+        // Load initial market data automatically with a small delay
+        setTimeout(() => {
+          loadMarketData()
+        }, 1000)
+      } catch (error) {
+        console.error('Error accessing sessionStorage:', error)
+        router.push('/')
+      } finally {
+        setIsPageLoading(false)
+      }
+    }
+
+    const timer = setTimeout(checkApiKey, 100)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (isPageLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasApiKey) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting...</p>
         </div>
       </div>
     )

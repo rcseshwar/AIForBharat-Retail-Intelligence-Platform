@@ -79,7 +79,7 @@ export function DashboardNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="w-64 bg-white border-r border-gray-200 min-h-screen">
+    <nav className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-screen">
       <div className="p-4">
         <div className="space-y-1">
           {navItems.map((item) => {
@@ -93,8 +93,8 @@ export function DashboardNav() {
                 className={cn(
                   'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
                   isActive
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-r-2 border-blue-700 dark:border-blue-400'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
                 )}
               >
                 <Icon className="mr-3 h-5 w-5" />

@@ -2,103 +2,70 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { MessageSquare, Send, Bot, User, Loader2 } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
-}
 
 export default function CopilotPage() {
   const [hasApiKey, setHasApiKey] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [message, setMessage] = useState('')
-  const [messages, setMessages] = useState<Message[]>([
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [conversation, setConversation] = useState<Array<{role: 'user' | 'assistant', content: string}>>([
     {
-      id: '1',
       role: 'assistant',
-      content: "Hello! I'm your AI business copilot. I can help you with strategic decisions, market analysis, business planning, and more. What would you like to discuss today?",
-      timestamp: new Date()
+      content: "Hello! I'm your AI business copilot. I can help you with strategic decisions, market analysis, business planning, and more. What would you like to discuss today?"
     }
   ])
-  const [isSending, setIsSending] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
+
+  // Auto-scroll to bottom when conversation updates
+  useEffect(() => {
+    const container = document.getElementById('conversation-container')
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
+  }, [conversation, isProcessing])
 
   useEffect(() => {
     const checkApiKey = () => {
       try {
-        const apiKey = sessionStorage.getItem('openai_api_key')
-        if (!apiKey) {
-          router.push('/')
+        if (typeof window === 'undefined') {
           return
         }
+        
+        const apiKey = sessionStorage.getItem('openai_api_key')
+        
+        if (!apiKey) {
+          setHasApiKey(false)
+          setIsLoading(false)
+          return
+        }
+        
         setHasApiKey(true)
       } catch (error) {
         console.error('Error accessing sessionStorage:', error)
-        router.push('/')
+        setHasApiKey(false)
       } finally {
         setIsLoading(false)
       }
     }
 
-    const timer = setTimeout(checkApiKey, 100)
+    const timer = setTimeout(checkApiKey, 200)
     return () => clearTimeout(timer)
   }, [router])
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!hasApiKey) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecting...</p>
-        </div>
-      </div>
-    )
-  }
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!message.trim() || isSending) return
+    if (!message.trim()) return
 
     const apiKey = sessionStorage.getItem('openai_api_key')
-    if (!apiKey) {
-      toast({
-        title: 'API Key Required',
-        description: 'Please provide your OpenAI API key to use this feature',
-        variant: 'destructive',
-      })
-      return
-    }
+    if (!apiKey) return
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: message.trim(),
-      timestamp: new Date()
-    }
-
-    setMessages(prev => [...prev, userMessage])
+    const userMessage = message.trim()
     setMessage('')
-    setIsSending(true)
+    setIsProcessing(true)
 
+    // Add user message to conversation
+    setConversation(prev => [...prev, { role: 'user', content: userMessage }])
+    
     try {
       const response = await fetch('/api/copilot', {
         method: 'POST',
@@ -106,50 +73,54 @@ export default function CopilotPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: message.trim(),
-          conversationHistory: messages.slice(-10), // Last 10 messages for context
-          apiKey
+          apiKey,
+          message: userMessage,
+          conversationHistory: conversation,
         }),
       })
 
       const result = await response.json()
 
       if (result.success) {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: result.message,
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, assistantMessage])
+        setConversation(prev => [...prev, { role: 'assistant', content: result.message }])
       } else {
-        toast({
-          title: 'Error',
-          description: result.error || 'Failed to get response from AI copilot',
-          variant: 'destructive',
-        })
+        setConversation(prev => [...prev, { 
+          role: 'assistant', 
+          content: `Sorry, I encountered an error: ${result.error || 'Please try again.'}` 
+        }])
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Network error. Please try again.',
-        variant: 'destructive',
-      })
+      setConversation(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered a network error. Please try again.' 
+      }])
     } finally {
-      setIsSending(false)
+      setIsProcessing(false)
     }
   }
 
-  const handleQuickAction = (action: string) => {
-    setMessage(action)
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading AI Copilot...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!hasApiKey) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <h2 className="text-xl font-bold text-red-600 mb-4">No API Key Found</h2>
+          <button 
+            onClick={() => router.push('/')}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Go to Home Page
+          </button>
         </div>
       </div>
     )
@@ -158,144 +129,77 @@ export default function CopilotPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">AI Copilot</h1>
-        <p className="text-gray-600">
-          Get AI assistance for business decisions and strategic planning.
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">AI Business Copilot</h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Get AI assistance for strategic decisions, market analysis, and business planning.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <MessageSquare className="h-5 w-5" />
-                <span>Chat with AI Copilot</span>
-              </CardTitle>
-              <CardDescription>
-                Ask for business advice, strategic insights, or help with decision-making.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="h-96 border rounded-lg p-4 bg-gray-50 overflow-y-auto">
-                  <div className="space-y-4">
-                    {messages.map((msg) => (
-                      <div key={msg.id} className={`flex items-start space-x-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                        {msg.role === 'assistant' && (
-                          <Bot className="h-8 w-8 bg-blue-600 text-white rounded-full p-1.5 flex-shrink-0" />
-                        )}
-                        <div className={`rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md ${
-                          msg.role === 'user' 
-                            ? 'bg-blue-600 text-white ml-auto' 
-                            : 'bg-white'
-                        }`}>
-                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                          <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
-                            {msg.timestamp.toLocaleTimeString()}
-                          </p>
-                        </div>
-                        {msg.role === 'user' && (
-                          <User className="h-8 w-8 bg-gray-600 text-white rounded-full p-1.5 flex-shrink-0" />
-                        )}
-                      </div>
-                    ))}
-                    {isLoading && (
-                      <div className="flex items-start space-x-3">
-                        <Bot className="h-8 w-8 bg-blue-600 text-white rounded-full p-1.5 flex-shrink-0" />
-                        <div className="bg-white rounded-lg p-3 shadow-sm">
-                          <div className="flex items-center space-x-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <p className="text-sm text-gray-600">AI is thinking...</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+      {/* Chat Interface */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700">
+        <div className="p-6 border-b dark:border-gray-600">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Chat with AI Copilot</h3>
+        </div>
+        <div className="p-6 space-y-4">
+          {/* Conversation */}
+          <div className="space-y-4 max-h-96 overflow-y-auto" id="conversation-container">
+            {conversation.map((msg, index) => (
+              <div key={index} className="flex space-x-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  msg.role === 'assistant' 
+                    ? 'bg-blue-100 dark:bg-blue-900' 
+                    : 'bg-gray-100 dark:bg-gray-700'
+                }`}>
+                  <span className={`text-sm font-medium ${
+                    msg.role === 'assistant' 
+                      ? 'text-blue-600 dark:text-blue-400' 
+                      : 'text-gray-600 dark:text-gray-300'
+                  }`}>
+                    {msg.role === 'assistant' ? 'AI' : 'You'}
+                  </span>
+                </div>
+                <div className={`flex-1 rounded-lg p-3 ${
+                  msg.role === 'assistant' 
+                    ? 'bg-gray-50 dark:bg-gray-700' 
+                    : 'bg-blue-50 dark:bg-blue-900/30'
+                }`}>
+                  <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{msg.content}</p>
+                </div>
+              </div>
+            ))}
+            {isProcessing && (
+              <div className="flex space-x-3">
+                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-blue-600 dark:text-blue-400 text-sm font-medium">AI</span>
+                </div>
+                <div className="flex-1 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Thinking...</p>
                   </div>
                 </div>
-                
-                <form onSubmit={handleSendMessage} className="flex space-x-2">
-                  <Input
-                    placeholder="Ask me anything about your business..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="flex-1"
-                    disabled={isSending}
-                  />
-                  <Button type="submit" disabled={isLoading || !message.trim()}>
-                    {isSending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </form>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start" 
-                onClick={() => handleQuickAction("Help me create a strategic plan for expanding my business into new markets")}
-              >
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Strategic Planning
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => handleQuickAction("Analyze current market trends in my industry and identify opportunities")}
-              >
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Market Analysis
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => handleQuickAction("What are the main risks facing my business and how can I mitigate them?")}
-              >
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Risk Assessment
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => handleQuickAction("Identify growth opportunities and revenue optimization strategies for my business")}
-              >
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Growth Opportunities
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Conversations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {messages.length > 1 ? (
-                <div className="space-y-2">
-                  {messages.slice(-3).filter(m => m.role === 'user').map((msg) => (
-                    <div key={msg.id} className="text-sm p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
-                         onClick={() => setMessage(msg.content)}>
-                      <p className="truncate">{msg.content}</p>
-                      <p className="text-xs text-gray-500">{msg.timestamp.toLocaleDateString()}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No recent conversations</p>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </div>
+          
+          {/* Input area */}
+          <form onSubmit={handleSendMessage} className="flex space-x-2 pt-4 border-t dark:border-gray-600">
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Ask me anything about your business..."
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              disabled={isProcessing}
+            />
+            <button 
+              type="submit"
+              disabled={isProcessing || !message.trim()}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? 'Sending...' : 'Send'}
+            </button>
+          </form>
         </div>
       </div>
     </div>

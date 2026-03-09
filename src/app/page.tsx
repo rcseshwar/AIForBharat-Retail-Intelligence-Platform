@@ -46,43 +46,43 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl space-y-8">
         {/* Hero Section */}
         <div className="text-center space-y-6">
           <div className="space-y-4">
-            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900">
+            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 dark:text-white">
               AI-Powered
-              <span className="text-blue-600 block">Retail Intelligence</span>
+              <span className="text-blue-600 dark:text-blue-400 block">Retail Intelligence</span>
             </h1>
-            <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-3xl mx-auto">
               Transform your retail business with AI-driven insights. Make data-driven decisions with natural language queries, market intelligence, and predictive analytics.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-              <h3 className="font-semibold text-gray-900 mb-2">Natural Language Queries</h3>
-              <p className="text-sm text-gray-600">Ask questions about your data in plain English and get instant insights.</p>
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-gray-700/20">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Natural Language Queries</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Ask questions about your data in plain English and get instant insights.</p>
             </div>
-            <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-              <h3 className="font-semibold text-gray-900 mb-2">Market Intelligence</h3>
-              <p className="text-sm text-gray-600">Stay ahead with real-time market trends and competitor analysis.</p>
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-gray-700/20">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Market Intelligence</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Stay ahead with real-time market trends and competitor analysis.</p>
             </div>
-            <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-              <h3 className="font-semibold text-gray-900 mb-2">Demand Forecasting</h3>
-              <p className="text-sm text-gray-600">Predict customer demand and optimize inventory management.</p>
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-gray-700/20">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Demand Forecasting</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Predict customer demand and optimize inventory management.</p>
             </div>
-            <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-              <h3 className="font-semibold text-gray-900 mb-2">Risk Analysis</h3>
-              <p className="text-sm text-gray-600">Identify business risks and ensure compliance automatically.</p>
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-gray-700/20">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Risk Analysis</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Identify business risks and ensure compliance automatically.</p>
             </div>
           </div>
         </div>
 
         {/* API Key Input Section */}
         <div className="flex justify-center">
-          <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-white/20">
+          <Card className="w-full max-w-md bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-white/20 dark:border-gray-700/20">
             <CardHeader className="text-center">
               <CardTitle className="flex items-center justify-center gap-2">
                 <Key className="h-5 w-5 text-blue-600" />
