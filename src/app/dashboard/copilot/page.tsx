@@ -17,6 +17,7 @@ interface Message {
 
 export default function CopilotPage() {
   const [hasApiKey, setHasApiKey] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -26,22 +27,56 @@ export default function CopilotPage() {
       timestamp: new Date()
     }
   ])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isSending, setIsSending] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
   useEffect(() => {
-    const apiKey = sessionStorage.getItem('openai_api_key')
-    if (!apiKey) {
-      router.push('/')
-      return
+    const checkApiKey = () => {
+      try {
+        const apiKey = sessionStorage.getItem('openai_api_key')
+        if (!apiKey) {
+          router.push('/')
+          return
+        }
+        setHasApiKey(true)
+      } catch (error) {
+        console.error('Error accessing sessionStorage:', error)
+        router.push('/')
+      } finally {
+        setIsLoading(false)
+      }
     }
-    setHasApiKey(true)
+
+    const timer = setTimeout(checkApiKey, 100)
+    return () => clearTimeout(timer)
   }, [router])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasApiKey) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!message.trim() || isLoading) return
+    if (!message.trim() || isSending) return
 
     const apiKey = sessionStorage.getItem('openai_api_key')
     if (!apiKey) {
@@ -62,7 +97,7 @@ export default function CopilotPage() {
 
     setMessages(prev => [...prev, userMessage])
     setMessage('')
-    setIsLoading(true)
+    setIsSending(true)
 
     try {
       const response = await fetch('/api/copilot', {
@@ -101,7 +136,7 @@ export default function CopilotPage() {
         variant: 'destructive',
       })
     } finally {
-      setIsLoading(false)
+      setIsSending(false)
     }
   }
 
@@ -185,10 +220,10 @@ export default function CopilotPage() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     className="flex-1"
-                    disabled={isLoading}
+                    disabled={isSending}
                   />
                   <Button type="submit" disabled={isLoading || !message.trim()}>
-                    {isLoading ? (
+                    {isSending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Send className="h-4 w-4" />

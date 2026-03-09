@@ -30,21 +30,56 @@ interface MarketData {
 
 export default function MarketPage() {
   const [hasApiKey, setHasApiKey] = useState(false)
+  const [isPageLoading, setIsPageLoading] = useState(true)
   const [marketData, setMarketData] = useState<MarketData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
   useEffect(() => {
-    const apiKey = sessionStorage.getItem('openai_api_key')
-    if (!apiKey) {
-      router.push('/')
-      return
+    const checkApiKey = () => {
+      try {
+        const apiKey = sessionStorage.getItem('openai_api_key')
+        if (!apiKey) {
+          router.push('/')
+          return
+        }
+        setHasApiKey(true)
+        // Load initial market data
+        loadMarketData()
+      } catch (error) {
+        console.error('Error accessing sessionStorage:', error)
+        router.push('/')
+      } finally {
+        setIsPageLoading(false)
+      }
     }
-    setHasApiKey(true)
-    // Load initial market data
-    loadMarketData()
+
+    const timer = setTimeout(checkApiKey, 100)
+    return () => clearTimeout(timer)
   }, [router])
+
+  if (isPageLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasApiKey) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    )
+  }
 
   const loadMarketData = async () => {
     const apiKey = sessionStorage.getItem('openai_api_key')

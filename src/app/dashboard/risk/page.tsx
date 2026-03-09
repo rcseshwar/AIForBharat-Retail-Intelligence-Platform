@@ -8,23 +8,47 @@ import { Shield, AlertTriangle, CheckCircle, XCircle, AlertCircle, RefreshCw } f
 
 export default function RiskPage() {
   const [hasApiKey, setHasApiKey] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    const apiKey = sessionStorage.getItem('openai_api_key')
-    if (!apiKey) {
-      router.push('/')
-      return
+    const checkApiKey = () => {
+      try {
+        const apiKey = sessionStorage.getItem('openai_api_key')
+        if (!apiKey) {
+          router.push('/')
+          return
+        }
+        setHasApiKey(true)
+      } catch (error) {
+        console.error('Error accessing sessionStorage:', error)
+        router.push('/')
+      } finally {
+        setIsLoading(false)
+      }
     }
-    setHasApiKey(true)
+
+    const timer = setTimeout(checkApiKey, 100)
+    return () => clearTimeout(timer)
   }, [router])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!hasApiKey) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Redirecting...</p>
         </div>
       </div>
     )

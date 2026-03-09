@@ -20,18 +20,28 @@ export function DashboardHeader() {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    setIsClient(true)
-    const apiKey = sessionStorage.getItem('openai_api_key')
-    
-    if (!apiKey) {
-      // Redirect to home if no API key
-      router.push('/')
-      return
+    const checkApiKey = () => {
+      try {
+        setIsClient(true)
+        const apiKey = sessionStorage.getItem('openai_api_key')
+        
+        if (!apiKey) {
+          // Redirect to home if no API key
+          router.push('/')
+          return
+        }
+        
+        setHasApiKey(true)
+        // Show the full API key
+        setApiKeyPreview(apiKey)
+      } catch (error) {
+        console.error('Error accessing sessionStorage:', error)
+        router.push('/')
+      }
     }
-    
-    setHasApiKey(true)
-    // Show the full API key
-    setApiKeyPreview(apiKey)
+
+    const timer = setTimeout(checkApiKey, 100)
+    return () => clearTimeout(timer)
   }, [router])
 
   const handleChangeApiKey = () => {
