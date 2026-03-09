@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AIService } from '@/lib/openai'
 import { prisma } from '@/lib/prisma'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 const DATABASE_SCHEMA = `
 -- Users and Organizations
 users (id, email, name, role, "organizationId", "createdAt", "updatedAt")

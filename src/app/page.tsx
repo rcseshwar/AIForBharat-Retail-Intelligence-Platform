@@ -66,16 +66,16 @@ export default function HomePage() {
               <p className="text-sm text-gray-600 dark:text-gray-300">Ask questions about your data in plain English and get instant insights.</p>
             </div>
             <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-gray-700/20">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">AI Business Copilot</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Get AI assistance for strategic decisions and business planning.</p>
-            </div>
-            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-gray-700/20">
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Market Intelligence</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Stay ahead with real-time market trends and competitor analysis.</p>
             </div>
             <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-gray-700/20">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Smart Analytics</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Analyze your business data with AI-powered insights and recommendations.</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Demand Forecasting</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Predict customer demand and optimize inventory management.</p>
+            </div>
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-gray-700/20">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Risk Analysis</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Identify business risks and ensure compliance automatically.</p>
             </div>
           </div>
         </div>

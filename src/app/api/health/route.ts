@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     // Basic health check - only test services if environment variables are available
@@ -21,8 +24,9 @@ export async function GET() {
     // Check if Redis URL is configured
     if (process.env.REDIS_URL) {
       try {
-        const { redis } = await import('@/lib/redis')
-        await redis.ping()
+        const { connectRedis } = await import('@/lib/redis')
+        const redisClient = await connectRedis()
+        await redisClient.ping()
         services.redis = 'connected'
       } catch (error) {
         services.redis = 'disconnected'

@@ -10,7 +10,14 @@ export const redis = globalForRedis.redis ?? createClient({
 
 if (process.env.NODE_ENV !== 'production') globalForRedis.redis = redis
 
-// Connect to Redis
-if (!redis.isOpen) {
-  redis.connect().catch(console.error)
+// Connect to Redis only when needed, not at module load
+export async function connectRedis() {
+  if (!redis.isOpen) {
+    try {
+      await redis.connect()
+    } catch (error) {
+      console.error('Redis connection failed:', error)
+    }
+  }
+  return redis
 }
